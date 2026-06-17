@@ -1,0 +1,99 @@
+seed: 42
+
+runtime:
+  max_examples: 100
+  log_every: 1
+  show_every: 1
+
+models:
+  speaker:
+    type: hf
+    name: Qwen/Qwen3-14B
+    lora: false
+    share_base: true
+    adapter_name: speaker
+    dtype: bfloat16
+    load_in_4bit: false
+    lora_target_modules:
+      - q_proj
+      - v_proj
+      - o_proj
+  listener:
+    type: hf
+    name: Qwen/Qwen3-14B
+    share_base: true
+    adapter_name: listener
+    dtype: bfloat16
+    load_in_4bit: false
+    lora_target_modules:
+      - q_proj
+      - v_proj
+      - o_proj
+  judge:
+    type: hf
+    name: Qwen/Qwen3-14B
+
+dataset_gen:
+  mode: pragmatic_mcq_generate
+  count: 100
+  per_section_count: 100
+  examples_path: data/pragmatic_examples.jsonl
+  mcq_examples_path: data/pragmatic_mcq_examples.jsonl
+  output: data/pragmaticQA_dataset_Qwen14b.jsonl
+  speaker_output: data/pragmaticQA_dataset_Qwen14b_speaker_stage.jsonl
+  output_dir: data/pragmatic_sections
+  input: data/pragmatic_dataset_7shot_phi.jsonl
+  eval_output: data/pragmatic_dataset_7shot_phi_response.jsonl
+  preview_first: false
+  few_shot_max: 7
+  speaker_batch_size: 10
+  mcq_batch_size: 10
+  speaker_history_max: 100
+  mcq_history_max: 50
+  speaker_max_attempts: 200
+  listener_max_attempts: 3
+  listener_enabled: false
+  speaker_temperature: 0.7
+  speaker_top_p: 0.9
+  speaker_max_new_tokens: 32768
+  speaker_enable_thinking: true
+  use_llm:
+    enabled: true
+    model_role: speaker
+    temperature: 0.7
+    top_p: 0.9
+    max_new_tokens: 32768
+    enable_thinking: true
+  listener_temperature: 0.7
+  listener_top_p: 0.9
+  listener_max_new_tokens: 32768
+  listener_enable_thinking: true
+  judge_temperature: 0.0
+  judge_top_p: null
+  judge_max_new_tokens: 256
+  judge_enable_thinking: false
+  pragmatic_retry_max: 1
+  sections:
+  - name: Context and Deixis
+    description: >-
+      Interpret meaning that depends on context by identifying the intended referent of underspecified or deictic expressions from the dialogue and current perspective.
+
+  - name: Implicature and Presupposition
+    description: >-
+      Recover non-explicit meaning by inferring what is implied under cooperative reasoning, and by identifying background assumptions required for an utterance to be interpretable.
+
+  - name: Speech Acts and Intent Recognition
+    description: >-
+      Infer what action an utterance performs in context, including cases where the intended act differs from the literal form.
+
+  - name: Discourse and Coherence
+    description: >-
+      Maintain a coherent interpretation across turns by linking utterances via discourse relations and tracking what has been established, updated, or answered.
+
+  - name: Social Pragmatics
+    description: >-
+      Interpret and respond appropriately when meaning is shaped by social context such as roles, power, culture, and interactional norms.
+
+  - name: Metaphor
+    description: >-
+      Interpret figurative language by mapping a non-literal description to the situation to recover the intended evaluation or action guidance, rather than a literal reading.

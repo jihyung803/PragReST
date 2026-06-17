@@ -1,0 +1,154 @@
+# Pragmatic QA -> audit -> STAR/SFT data -> train pipeline.
+#
+# Example parameter file for the generation, auditing, SFT-data, and training
+# scripts. `scripts/run_pragrest_pipeline.py` is a thin local orchestrator;
+# cluster-specific shell wrappers and checkpoint upload scripts are intentionally
+# omitted from the release.
+
+tag: qwen3_14b_cycle1
+seed: 42
+
+models:
+  base: Qwen/Qwen3-14B
+  generation: Qwen/Qwen3-14B
+  audit: Qwen/Qwen3-14B
+  train: Qwen/Qwen3-14B
+
+runtime:
+  python: .venv/bin/python
+  overwrite: true
+  cuda_visible_devices: "0"
+  clear_ld_library_path: true
+  vllm:
+    enable_v1_multiprocessing: false
+    worker_multiproc_method: spawn
+    gpu_memory_utilization: 0.85
+    tensor_parallel_size: 1
+    max_model_len: 32768
+    base_url: http://127.0.0.1:8000
+    api_key: EMPTY
+    timeout: 180
+    max_retries: 3
+
+stages:
+  data_generation:
+    enabled: false
+    backend: vllm_local_batched
+    output: data/pragmaticQA_qwen3_14b_cycle1.jsonl
+    domains_output: data/pragmaticQA_domain_keywords_qwen3_14b_cycle1.jsonl
+    shared_domains_path: data/pragmatic_domain_keywords_qwen3_14b_cycle1.jsonl
+    domains_input_path: ""
+    domain_count: 10
+    items_per_domain: 1
+    domain_generation_attempts: 20
+    qa_attempts_per_item: 6
+    qa_fewshot_examples_path: data/pragmatic_mcq_examples.jsonl
+    qa_fewshot_max: 10
+    qa_fewshot_subset_k: 4
+    qa_fewshot_shuffle: true
+    domain:
+      enable_thinking: true
+      temperature: 0.8
+      top_p: 0.95
+      top_k: 50
+      max_new_tokens: 32768
+      thinking_budget_tokens: 8192
+      answer_budget_tokens: 8192
+    qa:
+      enable_thinking: true
+      temperature: 0.8
+      top_p: 0.95
+      top_k: 50
+      max_new_tokens: 32768
+      thinking_budget_tokens: 8192
+      answer_budget_tokens: 8192
+
+  audit:
+    enabled: false
+    backend: vllm_local
+    audited_output: data/pragmaticQA_qwen3_14b_cycle1_audited.jsonl
+    summary_output: data/audit/pragmatic_audit_summary_qwen3_14b_cycle1.json
+    filter_strategy: bottom_percent
+    score_field: drop_minus_keep
+    drop_bottom_percent: 50.0
+    bottom_percent_scope: per_section
+    attach_to_kept: false
+    max_items_per_dataset: 0
+    enable_thinking: false
+    max_new_tokens: 2048
+
+  sft_data_generation:
+    enabled: false
+    backend: vllm_local_batched
+    qa_audited_input: data/pragmaticQA_qwen3_14b_cycle1_audited.jsonl
+    output_all: data/sft/pragmatic_sft_qwen3_14b_cycle1_all.jsonl
+    output_train: data/sft/pragmatic_sft_qwen3_14b_cycle1_train.jsonl
+    output_val: data/sft/pragmatic_sft_qwen3_14b_cycle1_val.jsonl
+    val_ratio: 0.02
+    max_samples: 0
+    max_qa_samples: 0
+    qa_mix_weight: 2
+    thinking_budget_tokens: 8192
+    answer_budget_tokens: 512
+    temperature: 0.8
+    top_p: 0.95
+    top_k: 50
+    max_input_length: 8192
+    keep_pragmatic_instruction_in_sft: false
+    judge:
+      drop_without_refine: true
+      refine_rounds: 0
+      method: margin
+      margin_threshold: 0.8
+      score_batch_size: 64
+      confidence_threshold: 8
+      enable_thinking: false
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      top_k: 50
+    star:
+      rationalize_failed: false
+
+  train:
+    enabled: false
+    mode: full_ft
+    output_dir: results/full_sft_qwen3_14b_cycle1
+    max_length: 8192
+    learning_rate: 5.0e-7
+    epochs: 2
+    batch_size: 1
+    grad_accum: 2
+    report_to: none
+    run_name: pragmatic-full-ft-qwen3_14b_cycle1
+    resume_from_checkpoint: ""
+    save_steps: 100
+    eval_steps: 50
+    lora:
+      r: 16
+      alpha: 32
+      dropout: 0.05
+      gradient_checkpointing: false
+      load_in_4bit: false
+    full_ft:
+      nproc_per_node: 1
+      nnodes: 4
+      node_rank: 0
+      master_addr: ""
+      master_port: 29513
+      eval_batch_size: 1
+      max_steps: -1
+      warmup_steps: 0
+      warmup_ratio: 0.03
+      logging_steps: 5
+      save_total_limit: 4
+      save_only_model: true
+      dtype: bfloat16
+      optim: adamw_torch
+      fsdp: full_shard auto_wrap
+      fsdp_layer: Qwen3DecoderLayer
+      fsdp_state_dict_type: FULL_STATE_DICT
+      fsdp_use_orig_params: true
+      fsdp_cpu_ram_efficient_loading: true
+      deepspeed: ""
+      gradient_checkpointing: true

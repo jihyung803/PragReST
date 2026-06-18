@@ -1,6 +1,6 @@
 # PragReST: Self-Reinforcing Counterfactual Reasoning for Pragmatic Language Understanding
 
-[![paper](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b)](https://arxiv.org/abs/XXXX.XXXXX)
+[![paper](https://img.shields.io/badge/arXiv-2606.18624-b31b1b)](https://arxiv.org/abs/2606.18624)
 [![Qwen3-8B](https://img.shields.io/badge/Model-Qwen3--8B--PragReST-yellow)](https://huggingface.co/minchaoh2002/Qwen3-8B-PragReST)
 [![Qwen3-14B](https://img.shields.io/badge/Model-Qwen3--14B--PragReST-yellow)](https://huggingface.co/minchaoh2002/Qwen3-14B-PragReST)
 
@@ -218,7 +218,7 @@ The code in this repository is released under the CC BY 4.0 License.
       title={PragReST: Self-Reinforcing Counterfactual Reasoning for Pragmatic Language Understanding},
       author={Park, Jihyung and Huang, Minchao and Liu, Leqi and Stengel-Eskin, Elias},
       year={2026},
-      journal={arXiv preprint arXiv:xxxx.xxxxx},
+      journal={arXiv preprint arXiv:2606.18624},
       url={https://arxiv.org/abs/xxxx.xxxxx},
 }
 ```

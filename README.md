@@ -219,7 +219,7 @@ The code in this repository is released under the CC BY 4.0 License.
       author={Park, Jihyung and Huang, Minchao and Liu, Leqi and Stengel-Eskin, Elias},
       year={2026},
       journal={arXiv preprint arXiv:2606.18624},
-      url={https://arxiv.org/abs/xxxx.xxxxx},
+      url={https://arxiv.org/abs/2606.18624},
 }
 ```
 
